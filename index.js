@@ -45,12 +45,21 @@ async function handleEvent(event) {
 
   const responses = await sessionClient.detectIntent(request);
   const result = responses[0].queryResult;
+const intent = result[0].queryResult.intent.displayName;
 
-  return client.replyMessage(event.replyToken, {
-    type: 'text',
-    text: result.fulfillmentText || 'すみません、もう一度お願いします！'
-  });
+let responseText = 'ご相談ありがとうございます。';
+
+// Intent名ごとの分岐（ここを増やせば何パターンでも対応可能！）
+if (intent === '法人税の相談') {
+  responseText = '法人税に関するご相談ですね。以下のフォームよりご連絡ください。';
+} else if (intent === '相続関連相談') {
+  responseText = '相続に関するご相談ですね。専門の担当者が対応いたします。';
 }
+return client.replyMessage(event.replyToken, {
+  type: 'text',
+  text: responseText
+});
+
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
