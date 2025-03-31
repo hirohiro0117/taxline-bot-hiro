@@ -42,35 +42,27 @@ async function handleEvent(event) {
       },
     },
   };
-  });
+
+  const responses = await sessionClient.detectIntent(request);
+  const result = responses[0].queryResult;
+  const intent = result.intent.displayName;
+
+  let responseText = 'ご相談ありがとうございます。';
+
+  // Intent名ごとの分岐
+  if (intent === '法人税') {
+    responseText = '法人税に関するご相談ですね。以下のフォームよりご連絡ください。';
+  } else if (intent === '相続相談') {
+    responseText = '相続に関するご相談ですね。専門の担当者が対応いたします。';
+  } else if (intent === '遺言関連の相談') {
+    responseText = '遺言書の作成についてですね。司法書士をご紹介します。';
+  }
+
   return client.replyMessage(event.replyToken, {
     type: 'text',
     text: responseText
   });
-});
-
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
-
-
-  const responses = await sessionClient.detectIntent(request);
-  const result = responses[0].queryResult;
-const intent = result[0].queryResult.intent.displayName;
-
-let responseText = 'ご相談ありがとうございます。';
-
-// Intent名ごとの分岐（ここを増やせば何パターンでも対応可能！）
-if (intent === '法人税') {
-  responseText = '法人税に関するご相談ですね。以下のフォームよりご連絡ください。';
-} else if (intent === '法人税') {
-  responseText = '法人税に関するご相談ですね。専門の担当者が対応いたします。';
 }
-return client.replyMessage(event.replyToken, {
-  type: 'text',
-  text: responseText
-});
-
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
