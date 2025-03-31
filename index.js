@@ -1,41 +1,57 @@
 const express = require('express');
 const line = require('@line/bot-sdk');
+const dialogflow = require('dialogflow');
+const uuid = require('uuid');
 
-const app = express();
-const port = process.env.PORT || 3000;
-
+// LINE設定
 const config = {
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
   channelSecret: process.env.CHANNEL_SECRET
 };
-
 const client = new line.Client(config);
 
+// Dialogflow設定
+const sessionClient = new dialogflow.SessionsClient({
+  credentials: {
+    private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    client_email: process.env.GOOGLE_CLIENT_EMAIL
+  }
+});
+const projectId = process.env.GOOGLE_PROJECT_ID;
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Webhook受信
 app.post('/webhook', line.middleware(config), (req, res) => {
   Promise.all(req.body.events.map(handleEvent)).then(result => res.json(result));
 });
 
-function handleEvent(event) {
-  if (event.type !== 'message' || event.message.type !== 'text') {
-    return Promise.resolve(null);
-  }
+async function handleEvent(event) {
+  if (event.type !== 'message' || event.message.type !== 'text') return null;
 
-  const text = event.message.text;
-  let replyMessage = '';
+  const sessionId = uuid.v4();
+  const sessionPath = sessionClient.sessionPath(projectId, sessionId);
 
-  if (text.includes('税金') || text.includes('相談')) {
-    replyMessage =
-      'ご相談ありがとうございます😊\n\n税金に関するご相談ですね！\n\n以下の方法でご連絡いただけます：\n📩 メール：abc@tax.com\n👨‍💼 担当：山下三郎（ABC税理士法人）\n\nこのままLINEで「お名前」と「ご相談内容」をご記入いただけましたら、担当よりご連絡させていただきます。';
-  } else {
-    replyMessage = `メッセージを受け取りました：「${text}」`;
-  }
+  const request = {
+    session: sessionPath,
+    queryInput: {
+      text: {
+        text: event.message.text,
+        languageCode: 'ja',
+      },
+    },
+  };
+
+  const responses = await sessionClient.detectIntent(request);
+  const result = responses[0].queryResult;
 
   return client.replyMessage(event.replyToken, {
     type: 'text',
-    text: replyMessage
+    text: result.fulfillmentText || 'すみません、もう一度お願いします！'
   });
 }
 
 app.listen(port, () => {
-  console.log(`LINE bot is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
