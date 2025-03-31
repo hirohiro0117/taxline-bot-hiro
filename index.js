@@ -42,6 +42,17 @@ async function handleEvent(event) {
       },
     },
   };
+  });
+  return client.replyMessage(event.replyToken, {
+    type: 'text',
+    text: responseText
+  });
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
+
 
   const responses = await sessionClient.detectIntent(request);
   const result = responses[0].queryResult;
