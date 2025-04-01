@@ -46,20 +46,12 @@ async function handleEvent(event) {
   const responses = await sessionClient.detectIntent(request);
   const result = responses[0].queryResult;
 
-  // Intent名を取得
-  const intent = result.intent.displayName;
-
-  // DialogflowのText Responseをそのまま使う
-  let responseText = result.fulfillmentText;
-
-  // 必要があればIntent名で個別に上書き
-  if (intent === '法人税') {
-    responseText = '法人税に関するご相談ですね。以下のフォームよりご連絡ください。';
-  }
+  // DialogflowのText Responseを取得
+  const responseText = result.fulfillmentText;
 
   return client.replyMessage(event.replyToken, {
     type: 'text',
-    text: responseText
+    text: responseText || 'ご相談ありがとうございます。'
   });
 }
 
