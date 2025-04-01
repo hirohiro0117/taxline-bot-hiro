@@ -45,17 +45,16 @@ async function handleEvent(event) {
 
   const responses = await sessionClient.detectIntent(request);
   const result = responses[0].queryResult;
+
+  // Intent名を取得
   const intent = result.intent.displayName;
 
-  let responseText = 'ご相談ありがとうございます。';
+  // DialogflowのText Responseをそのまま使う
+  let responseText = result.fulfillmentText;
 
-  // Intent名ごとの分岐
+  // 必要があればIntent名で個別に上書き
   if (intent === '法人税') {
     responseText = '法人税に関するご相談ですね。以下のフォームよりご連絡ください。';
-  } else if (intent === '相続相談') {
-    responseText = '相続に関するご相談ですね。専門の担当者が対応いたします。';
-  } else if (intent === '遺言関連の相談') {
-    responseText = '遺言書の作成についてですね。司法書士をご紹介します。';
   }
 
   return client.replyMessage(event.replyToken, {
